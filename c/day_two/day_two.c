@@ -37,20 +37,13 @@ int process_intcode(int pos, int array[]) {
     int second_num = array[pos+2];
     int index_of_result = array[pos+3];
 
-    printf("Program code: %d\n", code);
-
     if(code == 1) {
-        printf("Program code: Addition\n");
-        printf("Processing: %d + %d in position %d\n", array[first_num], array[second_num], array[index_of_result]);
         array[index_of_result] = array[first_num] + array[second_num];
     }
     if(code == 2) {
-        printf("Program code: Multiplication\n");
-        printf("Processing: %d * %d in position %d\n", array[first_num], array[second_num], array[index_of_result]);
         array[index_of_result] = array[first_num] * array[second_num];
     }
     if(code == 99) {
-        printf("Program code: HALT\n");
         return 1;
     }
     return 0;
@@ -61,12 +54,14 @@ int main(int argc, char* argv[]) {
     printf("****ADVENT OF CODE 2019 - DAY TWO ****\n");
 
     char *input = read_input_file();
+    int target_output = 19690720;
 
     // Split input string, convert to int and add to array
     const char *delim = ",";
     char *current_num = strtok(input, delim);
 
-    // There's possibly a better way to allocate this array size
+    // Hardcoding array size, no need to realloc for this fixed input
+    // but could've been good practice
     int input_numbers[153];
     int idx = 0;
 
@@ -76,21 +71,34 @@ int main(int argc, char* argv[]) {
         idx++;
     }
 
-    // Restore 1202 program alarm
-    input_numbers[1] = 12;
-    input_numbers[2] = 2;
+    // Yeah, look not perfect solution but my frustration trying to understand wtf part 2
+    // was asking led to this solution and not wanting to spend any time making it better
+    int p1, p2;
+    for(p1 = 0; p1 <= 100; p1++) {
+        for(p2 = 0; p2 <= 100; p2++) {
+            // Reset the memory to its initial state for each iteration
+            int input_numbers_copy[153];
+            memcpy(input_numbers_copy, input_numbers, sizeof(input_numbers));
 
-    int intcode_idx = 0;
-    while(intcode_idx < 153) {
-        printf("idx loop: %d, array intcode val: %d\n", intcode_idx, input_numbers[intcode_idx]);
-        int result = process_intcode(intcode_idx, input_numbers);
-        if(result == 1) {
-            break;
+            input_numbers_copy[1] = p1;
+            input_numbers_copy[2] = p2;
+
+            int intcode_idx = 0;
+            while(intcode_idx < 153) {
+                int result = process_intcode(intcode_idx, input_numbers_copy);
+                if(result == 1) {
+                    break;
+                }
+                intcode_idx += 4;
+            }
+
+            if(input_numbers_copy[0] == target_output) {
+                int output = 100 * p1 + p2;
+                printf("Found target pair: 100 * %d + %d = %d", p1, p2, output);
+                break;
+            }
         }
-        intcode_idx += 4;
     }
-
-    printf("Position 0 is: %d\n", input_numbers[0]);
 
     return 0;
 }
